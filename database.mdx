@@ -1,0 +1,388 @@
+---
+title: Database
+description: CouchDB-powered document storage for the Dreamscript editor, with HTTP APIs for projects and documents.
+---
+
+## How the Dreamscript database works
+
+Dreamscript uses a CouchDB-backed datastore to persist what you create in the editor. Each script, note, or asset is stored as a JSON document that can be read and written over HTTP.
+
+At a high level:
+
+- The editor works with structured JSON documents.
+- These documents are stored in a CouchDB cluster.
+- You interact with them through Dreamscript&apos;s REST API, not directly with CouchDB.
+
+<Callout kind="info">
+
+This guide focuses on how to use the Dreamscript database via HTTP. It does not describe direct access to CouchDB or its admin APIs.
+
+</Callout>
+
+### Why CouchDB matters
+
+CouchDB is designed around an append-only, replicated document store. For Dreamscript, that enables:
+
+- **Offline-friendly flows**: the editor can queue changes and sync when connectivity is restored.
+- **Replication across environments**: projects and documents can be mirrored between regions or backing stores with CouchDB&apos;s replication model.
+- **Revision semantics**: updates are tracked as revisions, which enables conflict detection when multiple writers touch the same document.
+
+You do not manage CouchDB directly. Instead, you interact with higher-level resources:
+
+- **Projects**: logical containers for related documents.
+- **Documents**: individual content records within or associated with projects.
+
+Conflicts and revisions are handled by the platform. Where conflicts cannot be auto-resolved, API responses will surface standard HTTP error codes (for example, `409` for conflict) so you can decide how to proceed.
+
+## Core resources: projects and documents
+
+The current API exposes two primary resource types that map to the underlying database:
+
+- **Projects**:
+  - Schema: `Project` with fields:
+    - `id` (`int64`, required)
+    - `name` (`string`, required)
+    - `description` (`string`, optional)
+  - Collections: `Projects` is an array of `Project`.
+
+- **Documents**:
+  - Schema: `Document` with fields:
+    - `id` (`int64`, required)
+    - `title` (`string`, required)
+    - `content` (`string`, optional)
+  - Collections: `Documents` is an array of `Document`.
+
+<Expandable title="Typical editor-to-database flow" default-open="false">
+
+A common path when working with the editor and the database looks like this:
+
+1. Create a **project** to group related work.
+2. Create **documents** in that project from the editor.
+3. Use the **HTTP API** to list, fetch, or process those documents from your own services.
+
+Internal mappings between projects and documents (for example, which document belongs to which project) are handled by the platform and are not exposed as direct foreign keys in the `Document` schema.
+
+</Expandable>
+
+## Authentication
+
+All endpoints in this guide use the same header-based authentication as the rest of the platform.
+
+- Header: `X-API-Key: YOUR_API_KEY`
+- Content type for JSON bodies: `Content-Type: application/json`
+
+For more details and key management, see [Authentication](/authentication).
+
+## Working with documents
+
+This section covers the document endpoints defined in the OpenAPI spec:
+
+- `GET /documents`
+- `POST /documents`
+- `GET /documents/{documentId}`
+
+### List documents: GET /documents
+
+Use `GET /documents` to retrieve an array of `Document` objects. The endpoint supports an optional `limit` query parameter to control page size.
+
+<Request tabs="cURL,HTTP" default-tab="1" show-lines="true">
+
+```bash
+curl -X GET "https://api.dreamscript.example.com/documents?limit=10" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```http
+GET /documents?limit=10 HTTP/1.1
+Host: api.dreamscript.example.com
+X-API-Key: YOUR_API_KEY
+Accept: application/json
+```
+
+</Request>
+
+<Response tabs="200,4xx/5xx" default-tab="1" show-lines="true">
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Intro script",
+    "content": "print('Hello from Dreamscript')"
+  },
+  {
+    "id": 2,
+    "title": "Data processing pipeline",
+    "content": "step1 -> step2 -> step3"
+  }
+]
+```
+
+```json
+{
+  "error": "invalid_request",
+  "message": "The provided limit is not valid."
+}
+```
+
+</Response>
+
+#### Query parameters
+
+- `limit` (`int32`, optional): maximum number of documents to return in a single page.
+
+### Create a document: POST /documents
+
+Use `POST /documents` to create a new document. On success, the API responds with `201 Created` and the newly created `Document` object.
+
+<Request tabs="cURL,HTTP" default-tab="1" show-lines="true">
+
+```bash
+curl -X POST "https://api.dreamscript.example.com/documents" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "New analysis",
+    "content": "step1: load data\nstep2: transform\nstep3: visualize"
+  }'
+```
+
+```http
+POST /documents HTTP/1.1
+Host: api.dreamscript.example.com
+X-API-Key: YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "title": "New analysis",
+  "content": "step1: load data\nstep2: transform\nstep3: visualize"
+}
+```
+
+</Request>
+
+<Response tabs="201,4xx/5xx" default-tab="1" show-lines="true">
+
+```json
+{
+  "id": 3,
+  "title": "New analysis",
+  "content": "step1: load data\nstep2: transform\nstep3: visualize"
+}
+```
+
+```json
+{
+  "error": "validation_error",
+  "message": "Title is required."
+}
+```
+
+</Response>
+
+<Callout kind="tip">
+
+In the current schema, `title` is required and `content` is optional. You can create placeholder documents with a title and fill in content later from the editor or your own tools.
+
+</Callout>
+
+### Fetch a single document: GET /documents/{documentId}
+
+Use `GET /documents/{documentId}` to retrieve an individual document by its identifier.
+
+<Request tabs="cURL,HTTP" default-tab="1" show-lines="true">
+
+```bash
+curl -X GET "https://api.dreamscript.example.com/documents/3" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```http
+GET /documents/3 HTTP/1.1
+Host: api.dreamscript.example.com
+X-API-Key: YOUR_API_KEY
+Accept: application/json
+```
+
+</Request>
+
+<Response tabs="200,404" default-tab="1" show-lines="true">
+
+```json
+{
+  "id": 3,
+  "title": "New analysis",
+  "content": "step1: load data\nstep2: transform\nstep3: visualize"
+}
+```
+
+```json
+{
+  "error": "not_found",
+  "message": "Document 3 was not found."
+}
+```
+
+</Response>
+
+## Working with projects
+
+Projects group documents and other resources. The current spec exposes:
+
+- `GET /projects`
+- `POST /projects`
+
+### List projects: GET /projects
+
+Use `GET /projects` to fetch an array of `Project` objects. Like documents, the endpoint supports a `limit` parameter.
+
+<Request tabs="cURL,HTTP" default-tab="1" show-lines="true">
+
+```bash
+curl -X GET "https://api.dreamscript.example.com/projects?limit=5" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```http
+GET /projects?limit=5 HTTP/1.1
+Host: api.dreamscript.example.com
+X-API-Key: YOUR_API_KEY
+Accept: application/json
+```
+
+</Request>
+
+<Response tabs="200" default-tab="1" show-lines="true">
+
+```json
+[
+  {
+    "id": 10,
+    "name": "Onboarding demos",
+    "description": "Example scripts used in the onboarding flow."
+  },
+  {
+    "id": 11,
+    "name": "Internal tooling",
+    "description": "Automation scripts for internal teams."
+  }
+]
+```
+
+</Response>
+
+### Create a project: POST /projects
+
+Use `POST /projects` to create a project that can later contain documents and other assets.
+
+<Request tabs="cURL,HTTP" default-tab="1" show-lines="true">
+
+```bash
+curl -X POST "https://api.dreamscript.example.com/projects" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Analytics experiments",
+    "description": "Ad-hoc analysis and dashboards."
+  }'
+```
+
+```http
+POST /projects HTTP/1.1
+Host: api.dreamscript.example.com
+X-API-Key: YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "name": "Analytics experiments",
+  "description": "Ad-hoc analysis and dashboards."
+}
+```
+
+</Request>
+
+<Response tabs="201" default-tab="1" show-lines="true">
+
+```json
+{
+  "id": 12,
+  "name": "Analytics experiments",
+  "description": "Ad-hoc analysis and dashboards."
+}
+```
+
+</Response>
+
+## Operational notes
+
+This section covers behavior that applies across multiple database endpoints: pagination, rate limiting, error handling, and permissions.
+
+### Pagination with x-next
+
+Collection endpoints (`GET /documents` and `GET /projects`) use header-based pagination:
+
+- Responses include an `x-next` header when there is another page available.
+- The value of `x-next` is an opaque cursor or URL that you can use to fetch the next page.
+
+A typical flow is:
+
+1. Call `GET /documents?limit=50`.
+2. Read the `x-next` header from the response.
+3. If present, call the URL in `x-next` (or pass it as a cursor, depending on how it is formatted).
+4. Stop when `x-next` is absent.
+
+<Callout kind="info">
+
+Treat `x-next` as an implementation detail that can change format over time. Do not attempt to parse it; pass it back to the API as returned.
+
+</Callout>
+
+### Rate limits and errors
+
+The database APIs are subject to rate limits to protect service reliability. While exact values may change, you should:
+
+- Avoid tight polling loops against `GET /documents` or `GET /projects`.
+- Prefer event-driven or batched access patterns where possible.
+- Implement backoff and retry with jitter for transient failures (for example, `429` or `5xx` responses).
+
+Common HTTP responses you should handle:
+
+- `400` for invalid parameters or malformed JSON.
+- `401` or `403` for authentication or permission issues.
+- `404` when a project or document does not exist.
+- `409` for state-related conflicts in rare cases.
+- `5xx` for transient server-side issues.
+
+### Permissions and access control
+
+Access to projects and documents is controlled by the API key you use:
+
+- API keys are scoped; they might only see specific projects or documents.
+- Attempts to access resources outside your scope can return `403` or empty collections, depending on configuration.
+- Use separate keys for production and non-production environments where practical.
+
+For key creation, rotation, and scopes, see [Authentication](/authentication).
+
+## How CouchDB influences behavior
+
+While you interact with a REST API, CouchDB&apos;s design has a few notable implications:
+
+- **Eventual consistency in some paths**: replicated clusters may show slightly different views of data for a short time after writes, especially across regions.
+- **Revision-aware updates**: the backing store uses revisions to detect concurrent writes. The public API may surface conflicts or last-write-wins behavior depending on the operation.
+- **Append-focused storage**: updates are modeled as new versions internally, which helps with reliability and conflict detection.
+
+You do not need to manage revision tokens directly for the endpoints covered in this guide, but be aware that:
+
+- Rapid, concurrent updates to the same document from multiple systems can surface conflicts.
+- Reads immediately following writes are generally consistent within the same region, but you should not depend on cross-region replication being instantaneous.
+
+## What&apos;s next
+
+This guide focused on the CouchDB-backed database layer and the `projects` and `documents` HTTP APIs.
+
+SDK docs are coming later. For now, you can:
+
+- Explore the full set of endpoints and schemas in the API Reference tab using the provided OpenAPI spec.
+- Review authentication details, key management, and scopes in [Authentication](/authentication).
+
+As the SDKs become available, they will wrap the same HTTP APIs described here, so integrating at the HTTP level now will stay compatible.

@@ -47,9 +47,19 @@
             "icon": "compass",
             "pages": [
               {
+                "title": "Database",
+                "path": "database",
+                "icon": "database"
+              },
+              {
                 "title": "Authentication",
                 "path": "authentication",
                 "icon": "lock"
+              },
+              {
+                "title": "SDK",
+                "path": "sdk",
+                "icon": "box"
               }
             ]
           }

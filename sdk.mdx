@@ -1,0 +1,339 @@
+---
+title: SDK
+description: Official JavaScript/TypeScript SDK for Dreamscript/Dreambase.
+---
+## Overview
+
+The Dreambase SDK is the official JavaScript/TypeScript client for working with Dreambase databases, storage, and platform APIs from Node.js or browser environments.
+
+It wraps the HTTP API with typed methods for databases, collections, documents, indexes, API keys, storage, audit logs, support tickets, and platform status.
+
+## Installation
+
+Install directly from GitHub using your preferred package manager.
+
+<CodeGroup show-lines="true" tabs={[]}>
+  ```bash
+  npm install github:lightspikeVal/dreamscript-sdk
+  ```
+
+  ```bash
+  yarn add github:lightspikeVal/dreamscript-sdk
+  ```
+
+  ```bash
+  pnpm add github:lightspikeVal/dreamscript-sdk
+  ```
+</CodeGroup>
+
+<Callout kind="info" collapsed="false">
+  The SDK is installed directly from the `github:lightspikeVal/dreamscript-sdk` repository. You do not need to install a separate npm registry package.
+</Callout>
+
+## Quick start
+
+Initialize the SDK with either an API key or a user JWT. In both cases, you configure the API endpoint with an environment variable.
+
+```typescript
+import { Dreambase } from '@dreambase/sdk';
+
+// Initialize with API Key
+const db = new Dreambase({
+  endpoint: process.env.DREAM_ENDPOINT, // e.g., 'https://api.dreambase.top'
+  apiKey: process.env.DREAMBASE_API_KEY,
+});
+
+// Or initialize with JWT (for user-authenticated requests)
+const dbWithJwt = new Dreambase({
+  endpoint: process.env.DREAM_ENDPOINT,
+  jwt: userJwtToken,
+});
+```
+
+<Callout kind="tip" collapsed="false">
+  Use API-key authentication for server-to-server or backend jobs, and JWT authentication when acting on behalf of an authenticated end user.
+</Callout>
+
+## Databases
+
+### Create, list, delete, and check quota
+
+```typescript
+// Create a database
+const { database } = await db.createDatabase('myapp', 1024 * 1024 * 1024); // 1GB limit
+
+// List all databases
+const { databases } = await db.listDatabases();
+
+// Delete a database
+await db.deleteDatabase('myapp');
+
+// Check quota
+const quota = await db.getQuota('myapp');
+console.log(quota.database.diskSize, quota.database.limitBytes);
+```
+
+## Collections / tables
+
+### Create tables and reindex
+
+```typescript
+// Create a collection (table)
+await db.createTable('myapp', 'users');
+
+// Reindex database (recreate collection index)
+await db.reindexDatabase('myapp');
+```
+
+## Documents
+
+### Create, list, get, update, and delete documents
+
+```typescript
+// Create a document
+const { id, rev } = await db.createDocument('myapp', 'users', {
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 30,
+});
+
+// Get documents from a collection
+const { docs, total } = await db.getDocuments('myapp', 'users', {
+  skip: 0,
+  limit: 50,
+});
+
+// Get a single document
+const user = await db.getDocument('myapp', id);
+
+// Update a document
+await db.updateDocument('myapp', id, {
+  age: 31,
+  updatedField: 'new value',
+});
+
+// Delete a document
+await db.deleteDocument('myapp', id);
+```
+
+## Indexes
+
+### List and create indexes
+
+```typescript
+// List indexes
+const { indexes } = await db.listIndexes('myapp');
+
+// Create an index
+await db.createIndex('myapp', 'email_idx', ['email'], false);
+
+// Create a unique index
+await db.createIndex('myapp', 'username_unique', ['username'], true);
+```
+
+<Callout kind="info" collapsed="false">
+  Indexes improve query performance and can enforce uniqueness. Free plan quotas on indexes are described in the quotas section below.
+</Callout>
+
+## Storage
+
+### Storage stats and public files
+
+```typescript
+// Get storage statistics
+const stats = await db.getStorageStats();
+console.log(stats.totalFiles, stats.totalBytes);
+
+// Get a public file
+const file = await db.getPublicFile('myapp', 'file-id');
+```
+
+## Audit logs
+
+### Enable, query, and purge logs
+
+```typescript
+// Enable audit logs
+await db.toggleAuditLogs('myapp', true);
+
+// Get audit logs
+const { logs, total } = await db.getAuditLogs('myapp', {
+  skip: 0,
+  limit: 100,
+});
+
+// Purge audit logs
+const { purged } = await db.purgeAuditLogs('myapp');
+```
+
+```typescript
+// Create a support ticket
+const { ticket } = await db.createSupportTicket({
+  name: 'John Doe',
+  email: 'john@example.com',
+  subject: 'Need help with API',
+  message: 'I am having trouble with...',
+});
+```
+
+## Platform status
+
+### Check overall platform health
+
+```typescript
+// Check platform status
+const status = await db.getPlatformStatus();
+if (status?.active) {
+  console.log(`Platform alert: ${status.message}`);
+}
+```
+
+## Error handling
+
+Use `DreambaseError` to get structured details about errors thrown by the SDK.
+
+```typescript
+import { Dreambase, DreambaseError } from '@dreambase/sdk';
+
+try {
+  await db.createDocument('myapp', 'users', { name: 'Test' });
+} catch (error) {
+  if (error instanceof DreambaseError) {
+    console.error('Error:', error.message);
+    console.error('Status:', error.statusCode);
+    console.error('Details:', error.details);
+  }
+}
+```
+
+<Callout kind="alert" collapsed="false">
+  Always handle `DreambaseError` in production code to surface meaningful messages and status codes to your logs or monitoring.
+</Callout>
+
+## Environment variables
+
+Configure the SDK using environment variables:
+
+```bash
+DREAM_ENDPOINT=https://api.dreambase.top
+DREAMBASE_API_KEY=db_xxxxx_xxxxxxxxxxxxxxxxxx
+```
+
+## TypeScript support
+
+The SDK provides full TypeScript types for core resources and responses.
+
+```typescript
+import { Dreambase, Database, Document, Quota } from '@dreambase/sdk';
+
+const db = new Dreambase({ endpoint: process.env.DREAM_ENDPOINT!, apiKey: 'key' });
+
+// All responses are fully typed
+const quota: Quota = await db.getQuota('myapp');
+const databases: Database[] = (await db.listDatabases()).databases;
+```
+
+## API reference
+
+### Constructor
+
+- `new Dreambase(config: DreambaseConfig)`
+
+### Database methods
+
+- `createDatabase(name: string, limitBytes?: number)`
+
+- `listDatabases()`
+
+- `deleteDatabase(dbName: string)`
+
+- `getQuota(dbName?: string)`
+
+- `createTable(database: string, table: string)`
+
+- `reindexDatabase(database: string)`
+
+### Index methods
+
+- `listIndexes(dbName: string)`
+
+- `createIndex(dbName: string, name: string, fields: string[], unique?: boolean)`
+
+### Document methods
+
+- `createDocument(dbName: string, collection: string, doc: Record<string, any>)`
+
+- `getDocuments(dbName: string, collection: string, options?: { skip?: number; limit?: number })`
+
+- `getDocument(dbName: string, docId: string)`
+
+- `updateDocument(dbName: string, docId: string, updates: Record<string, any>)`
+
+- `deleteDocument(dbName: string, docId: string)`
+
+### API key methods
+
+- `createApiKey(name: string, scopes?: string[])`
+
+- `listApiKeys()`
+
+- `resetApiKey(prefix: string)`
+
+### Storage methods
+
+- `getStorageStats()`
+
+- `getPublicFile(dbName: string, fileId: string)`
+
+### Audit methods
+
+- `toggleAuditLogs(dbName: string, enabled: boolean)`
+
+- `getAuditLogs(dbName: string, options?: { skip?: number; limit?: number })`
+
+- `purgeAuditLogs(dbName: string)`
+
+### Support methods
+
+- `createSupportTicket(ticket: { name, email, subject, message })`
+
+### Platform methods
+
+- `getPlatformStatus()`
+
+## Rate limits
+
+- Write operations: 20 requests per minute
+
+- Read operations: 50 requests per minute
+
+These rate limits apply per project and may vary by plan or deployment environment.
+
+## Quotas
+
+Quotas for the free plan:
+
+- Maximum 2 databases per user
+
+- Maximum 3 indexes per database
+
+- Maximum 10MB per document
+
+- Database size limits configurable per database
+
+Quota values may differ for paid plans or dedicated environments, but the limits above apply to the free tier.
+
+## License
+
+MIT
+
+## Support
+
+For issues and questions:
+
+- Create a support ticket via the SDK
+
+- Visit: [https://dreambase.top/support](https://dreambase.top/support)
+
+- Email: [support@dreambase.top](mailto:support@dreambase.top)
+
