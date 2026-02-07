@@ -1,0 +1,160 @@
+---
+title: Quickstart Guide
+description: Set up your Dreambase account and create your first project in minutes to start building applications with backend services.
+---
+
+## Prerequisites
+
+<Callout kind="info" title="Before you begin">
+Ensure you have the following ready:
+- A GitHub account for optional integrations
+- Node.js `{version >= 18}` or Python `{version >= 3.10}` installed for SDK examples
+- Access to a code editor like VS Code
+</Callout>
+
+## Create Your Dreambase Account
+
+Sign up for a free Dreambase account to access backend services like databases, storage, and functions.
+
+<Steps>
+  <Step title="Visit Dashboard" icon="monitor">
+    Navigate to `https://dashboard.example.com` and click **Sign Up**.
+
+    <Image
+      src="https://via.placeholder.com/800x400/3B82F6/FFFFFF?text=Sign+Up"
+      alt="Dreambase dashboard signup page"
+      width="800"
+      height="400"
+    />
+  </Step>
+
+  <Step title="Complete Registration" icon="user-plus">
+    Enter your email, create a password, and verify your account via email.
+  </Step>
+
+  <Step title="Verify Email" icon="mail">
+    Check your inbox and click the verification link.
+  </Step>
+</Steps>
+
+## Set Up Your First Project
+
+Create a new project to organize your resources.
+
+<Steps>
+  <Step title="Create Project" icon="plus">
+    In the dashboard, click **Create Project** and name it `my-first-app`.
+  </Step>
+
+  <Step title="Copy Project ID" icon="copy">
+    Note your `PROJECT_ID` from the project settings. You'll need it for SDKs.
+  </Step>
+
+  <Step title="Enable Database Service" icon="database">
+    Go to **Database** in the sidebar and create your first database named `main`.
+  </Step>
+</Steps>
+
+## Configure Environment Variables
+
+Set up your environment with the required keys.
+
+<Tabs>
+  <Tab title="JavaScript" icon="code">
+    Create a `.env` file:
+
+````javascript
+DREAMBASE_ENDPOINT="https://api.example.com/v1"
+DREAMBASE_PROJECT_ID="your-project-id-here"
+DREAMBASE_API_KEY="YOUR_API_KEY"
+````
+  </Tab>
+
+  <Tab title="Python" icon="python">
+    Create a `.env` file:
+
+````python
+DREAMBASE_ENDPOINT = "https://api.example.com/v1"
+DREAMBASE_PROJECT_ID = "your-project-id-here"
+DREAMBASE_API_KEY = "YOUR_API_KEY"
+````
+  </Tab>
+</Tabs>
+
+## Make Your First Database Query
+
+Install the SDK and query your database.
+
+<CodeGroup tabs="JavaScript,Python">
+```javascript
+// Install: npm install dreambase
+import { Client, Databases, ID } from 'dreambase';
+
+const client = new Client();
+client.setEndpoint('https://api.example.com/v1').setProject('your-project-id-here');
+
+const databases = new Databases(client);
+
+const promise = databases.createDocument(
+  'main',
+  'todos',
+  ID.unique(),
+  {
+    title: 'Learn Dreambase',
+    completed: false
+  }
+);
+
+promise.then(response => console.log(response), error => console.log(error));
+```
+
+```python
+# Install: pip install dreambase
+from dreambase import Client, Databases, ID
+
+client = Client()
+client.set_endpoint('https://api.example.com/v1').set_project('your-project-id-here')
+
+databases = Databases(client)
+
+result = databases.create_document(
+  database_id='main',
+  collection_id='todos',
+  document_id=ID.unique(),
+  data={
+    'title': 'Learn Dreambase',
+    'completed': False
+  }
+)
+
+print(result)
+```
+</CodeGroup>
+
+<Callout kind="success">
+Your first document is created! Check the dashboard to view it.
+</Callout>
+
+## Next Steps
+
+Explore more features to build your application.
+
+<Columns cols={3}>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Secure your app with user accounts and sessions.
+  </Card>
+
+  <Card title="Storage" icon="upload" href="/configuration">
+    Manage files with secure storage buckets.
+  </Card>
+
+  <Card title="Functions" icon="code" href="/introduction">
+    Deploy serverless code for custom logic.
+  </Card>
+</Columns>
+
+<Expandable title="Troubleshooting Common Issues" default-open="false">
+- **API Key Error**: Ensure `YOUR_API_KEY` is copied from **API Keys** in project settings.
+- **CORS Issues**: Add your domain to allowed origins in project settings.
+- **Collection Missing**: Create a `todos` collection in the dashboard first.
+</Expandable>

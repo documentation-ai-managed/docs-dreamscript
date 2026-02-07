@@ -1,0 +1,164 @@
+---
+title: Authentication and Permissions
+description: Learn how to secure your Dreambase projects with authentication methods, API keys, and role-based permissions.
+---
+
+## Overview
+
+Secure your Dreamscript projects using API keys for server-side access, JWT tokens for user sessions, and role-based access control (RBAC) for permissions. Dreamscript supports multiple authentication flows to fit your needs, from anonymous sessions to full OAuth integrations.
+
+<Callout kind="alert" title="Security First">
+Always store API keys and tokens securely. Never expose them in client-side code or public repositories. Use environment variables and rotate keys regularly.
+</Callout>
+
+## Authentication Methods
+
+Choose the right method based on your use case. API keys suit server-to-server communication, while user authentication handles end-user sessions.
+
+<Tabs>
+<Tab title="API Keys" icon="key">
+API keys provide scoped access to Dreamscript services. Generate them from your project dashboard.
+
+<Steps>
+<Step title="Generate API Key" icon="settings">
+Navigate to your project settings in the Dreamscript console and create a new API key with the required scopes.
+</Step>
+<Step title="Use in Requests" icon="code">
+Add the key to the `X-API-Key` header in API calls.
+</Step>
+</Steps>
+
+<ParamField header="X-API-Key" param-type="string" required="true">
+Your generated API key, e.g., `YOUR_API_KEY`.
+</ParamField>
+
+<CodeGroup tabs="JavaScript,Python,cURL">
+```javascript
+const response = await fetch('https://api.example.com/v1/databases', {
+  headers: {
+    'X-API-Key': 'YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  }
+});
+```
+```python
+import requests
+
+response = requests.get(
+    'https://api.example.com/v1/databases',
+    headers={'X-API-Key': 'YOUR_API_KEY'}
+)
+```
+```bash
+curl -H "X-API-Key: YOUR_API_KEY" \
+     https://api.example.com/v1/databases
+```
+</CodeGroup>
+</Tab>
+
+<Tab title="User Authentication" icon="user">
+Handle user signups, logins, and sessions with email/password or OAuth providers.
+
+<Request tabs="JavaScript,cURL" show-lines="true">
+```javascript
+const session = await account.createEmailSession('user@example.com', 'password123');
+```
+```bash
+curl -X POST https://api.example.com/v1/account/sessions/email \
+     -H "Content-Type: application/json" \
+     -d '{
+       "email": "user@example.com",
+       "password": "password123"
+     }'
+```
+</Request>
+
+<Response tabs="200">
+```json
+{
+  "userId": "user_abc123",
+  "sessionId": "sess_xyz789",
+  "$createdAt": "2024-01-01T00:00:00.000+00:00"
+}
+```
+</Response>
+</Tab>
+</Tabs>
+
+## Managing Permissions and Roles
+
+Define granular permissions on resources like databases and storage buckets. Use roles such as `role:all`, `role:users[any]`, or custom user IDs.
+
+<Expandable title="Permission Syntax" default-open="true">
+Permissions follow the format `resource:action[role]`. Examples:
+
+| Permission | Description |
+|------------|-------------|
+| `document:read` | Read any document |
+| `document:write(role:member)` | Write for members only |
+| `any:delete(user:USER_ID)` | Delete by specific user |
+
+</Expandable>
+
+<ParamField path="permission" param-type="string" required="false">
+Permission string, e.g., `document:read(role:users[any])`.
+</ParamField>
+
+## Implementation Example
+
+Set up a protected database collection.
+
+<CodeGroup tabs="JavaScript,Python">
+```javascript
+// Create collection with permissions
+const collection = await databases.createCollection(
+  'DATABASE_ID',
+  'COLLECTION_ID',
+  'users',
+  ['*'],
+  [
+    { permission: 'read', role: 'role:guest' },
+    { permission: 'write', role: 'users[$userId]' }
+  ]
+);
+```
+```python
+# Similar Python implementation using requests
+```
+</CodeGroup>
+
+## Security Best Practices
+
+Follow these guidelines to maintain secure access:
+
+<Columns cols={2}>
+<Card title="Rotate Keys" icon="refresh-cw" href="#">
+Generate new keys periodically and revoke old ones.
+</Card>
+<Card title="Least Privilege" icon="shield" href="#">
+Assign minimal scopes needed for each key.
+</Card>
+<Card title="HTTPS Only" icon="lock" href="#">
+All API calls must use HTTPS.
+</Card>
+<Card title="Audit Logs" icon="activity" href="/quickstart">
+Enable logging to monitor access.
+</Card>
+</Columns>
+
+<Callout kind="tip">
+For production, integrate with external identity providers like Auth0 or Google OAuth via Dreamscript's OAuth2 endpoints.
+</Callout>
+
+<Expandable title="Advanced: JWT Validation" default-open="false">
+Validate JWTs manually:
+
+```javascript
+import jwt from 'jsonwebtoken';
+
+const token = 'YOUR_JWT_TOKEN';
+const decoded = jwt.verify(token, 'YOUR_PROJECT_SECRET');
+```
+
+Keep your project secret safe and use RS256 for production signing.
+</Expandable>

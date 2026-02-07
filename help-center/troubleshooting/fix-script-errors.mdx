@@ -1,0 +1,31 @@
+---
+title: Script Not Running
+description: Resolve issues when your Dreamscript script fails to run.
+---
+
+## Symptoms
+
+- Script does not execute
+- Red error alerts in the editor
+
+## Common Causes
+
+- Syntax errors
+- Unsupported functions
+
+## Quick Fix
+
+<Steps>
+  <Step title="Check syntax">
+    ````dreamscript
+    // Look for red underlines or parser errors
+    function hello() {
+      print("Hello, world!")
+    }
+    hello()
+    ````
+  </Step>
+  <Step title="Review documentation">
+    Ensure all used functions are supported in Dreamscript.
+  </Step>
+</Steps>

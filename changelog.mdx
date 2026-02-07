@@ -1,0 +1,115 @@
+---
+title: Changelog
+description: Track the latest updates, new features, and improvements in Dreambase to stay informed about platform changes.
+---
+
+## Recent Updates
+
+<Callout kind="info" title="Stay Informed">
+Subscribe to our RSS feed or follow us on GitHub to get notified about new releases and important changes.
+</Callout>
+
+<Update label="2024-10-15" description="v1.5.0" tags={["feature", "improvement"]}>
+## New Features
+
+- Added realtime database subscriptions for live updates across clients.
+- Introduced image transformation APIs in Storage for resizing and cropping on-the-fly.
+
+## Improvements
+
+- Enhanced Functions execution speed by 25% with optimized cold starts.
+- Improved dashboard UI with dark mode support and better navigation.
+
+## Bug Fixes
+
+- Fixed intermittent connection drops in Realtime service.
+- Resolved file upload limits exceeding configured bucket sizes.
+</Update>
+
+<Update label="2024-09-20" description="v1.4.0" tags={["feature", "bugfix"]}>
+## New Features
+
+- Launched multi-region database replication for global low-latency access.
+- Added custom domain support for Functions endpoints.
+
+## Bug Fixes
+
+- Patched security vulnerability in user authentication flows (CVE-2024-XXXX).
+- Fixed query pagination issues in Databases affecting large datasets.
+
+## Improvements
+
+- Reduced Storage latency for large file downloads.
+</Update>
+
+<Update label="2024-08-10" description="v1.3.0" tags={["breaking", "feature"]}>
+## Breaking Changes
+
+- Updated API version to `v1` – update your client SDKs to avoid deprecation warnings.
+- Removed legacy `beta` endpoints; migrate to stable versions.
+
+## New Features
+
+- Integrated edge functions deployment across the Dreambase Network.
+- Added team-based project permissions with granular role controls.
+
+## Migration Notes
+
+Run the upgrade script in your console:
+
+<CodeGroup tabs="Node.js,Python">
+```javascript
+const dreambase = require('dreambase-sdk');
+await dreambase.upgradeProject('your-project-id');
+```
+```python
+import dreambase
+dreambase.upgrade_project(project_id="your-project-id")
+```
+</CodeGroup>
+</Update>
+
+## Upgrading Your Project
+
+<Steps>
+<Step title="Check Compatibility" icon="check-circle">
+Review the breaking changes in each release above. Test in staging first.
+</Step>
+<Step title="Update SDK" icon="download">
+Install the latest SDK version matching your runtime.
+````bash
+npm install dreambase-sdk@latest
+````
+</Step>
+<Step title="Deploy Changes" icon="rocket">
+Redeploy your Functions and verify database schemas.
+</Step>
+</Steps>
+
+<Callout kind="tip">
+Always back up your projects before upgrading. Use the [Dreambase Console](https://dashboard.example.com) for one-click exports.
+</Callout>
+
+## Quick Links
+
+<Columns cols={3}>
+<Card title="Quickstart" icon="zap" href="/quickstart">
+Get started with a new project in under 2 minutes.
+</Card>
+<Card title="Authentication" icon="lock" href="/authentication">
+Secure your apps with API keys and JWT tokens.
+</Card>
+<Card title="Functions" icon="code" href="/functions">
+Deploy serverless code with multiple runtimes.
+</Card>
+</Columns>
+
+<Expandable title="Full Version History" default-open="false">
+For older releases, check our [GitHub releases page](https://github.com/dreambase/releases).
+
+| Version | Date       | Key Changes                  |
+|---------|------------|------------------------------|
+| v1.2.0 | 2024-07-05 | Storage encryption upgrades |
+| v1.1.0 | 2024-06-12 | Initial realtime beta       |
+| v1.0.0 | 2024-05-01 | Platform launch             |
+</Expandable>
