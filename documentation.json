@@ -23,43 +23,17 @@
                 "title": "Introduction",
                 "path": "introduction",
                 "icon": "home"
-              },
+              }
+            ]
+          },
+          {
+            "group": "SDKs",
+            "icon": "compass",
+            "pages": [
               {
                 "title": "Quickstart",
                 "path": "quickstart",
                 "icon": "zap"
-              }
-            ]
-          },
-          {
-            "group": "Core Concepts",
-            "icon": "layers",
-            "pages": [
-              {
-                "title": "Concepts",
-                "path": "concepts",
-                "icon": "file-text"
-              }
-            ]
-          },
-          {
-            "group": "Guides",
-            "icon": "compass",
-            "pages": [
-              {
-                "title": "Database",
-                "path": "database",
-                "icon": "database"
-              },
-              {
-                "title": "Authentication",
-                "path": "authentication",
-                "icon": "lock"
-              },
-              {
-                "title": "SDK",
-                "path": "sdk",
-                "icon": "box"
               }
             ]
           }
