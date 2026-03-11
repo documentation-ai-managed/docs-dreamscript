@@ -1,104 +1,121 @@
 ---
-title: Introduction to Dreambase
-description: Discover Dreambase, an open-source cloud development platform that provides built-in backend infrastructure including databases, storage, functions, and realtime capabilities for efficient project building.
+title: Introduction to Novisurf
+description: Get an overview of Novisurf Storage, including multi-node object storage, firewall analytics, quota monitoring, public and private buckets, and the Novisurf dashboard.
 ---
 
-<Callout kind="info" title="Starter Kit Template">
-  This documentation was generated as a starter kit template based on your brand. Please review and customize the content to accurately reflect your product's features, APIs, and capabilities.
-</Callout>
+## What is Novisurf?
 
-## Overview
+Novisurf provides multi-node object storage with built-in security and observability so you can store, serve, and monitor files for your applications from a single platform.
 
-Dreambase is an open-source cloud development platform designed for developers who want to build projects quickly. It provides built-in backend infrastructure, including scalable databases, secure storage, serverless functions, and realtime capabilities. You get everything you need in one place, with web hosting included, so you can focus on shipping features.
+Use Novisurf Storage to manage buckets, upload and serve files, control public access, and track usage and firewall activity through an integrated dashboard.
 
-Start building for free today. No credit card required for the free tier, which supports unlimited projects and generous resource limits.
+## Core storage model
 
-## Key Features
+Novisurf Storage organizes all file data into buckets and backs those buckets with different storage backends.
 
-Dreambase combines essential backend services into a unified platform. Explore the core components:
+- **Multi-node backends** — Buckets can run on on-prem infrastructure (`ONPREM`) or network file storage (`NF`), giving you flexibility in how and where data is stored.
+- **Buckets as the unit of organization** — Group files by application, environment, tenant, or feature. Apply access controls, quotas, and monitoring policies at the bucket level.
+- **Public file serving** — When you mark a bucket as public, files are served directly from the Novisurf Storage domain at `https://storage.novisurf.top/{bucket}/{filename}`.
+
+This model lets you treat storage as a single logical layer while Novisurf handles details like which nodes store your data and how files are routed.
+
+## Key capabilities
+
+Novisurf focuses on storage, access control, and visibility so you can integrate files into your product without building your own storage layer.
 
 <Columns cols={2}>
-  <Card title="Databases" icon="database" href="#databases">
-    Build scalable applications with robust, multi-model databases. Supports SQL and NoSQL with automatic scaling.
+  <Card title="Multi-node object storage" icon="database" href="#multi-node-object-storage">
+    Store and serve objects across `ONPREM` and `NF` backends. Use buckets to group files and let Novisurf handle routing to the right storage nodes.
   </Card>
-  <Card title="Storage" icon="hard-drive" href="#storage">
-    Securely store files with encryption, compression, and on-the-fly image transformations.
+  <Card title="Firewall analytics and security" icon="shield" href="#firewall-analytics-and-security">
+    Inspect how requests interact with your firewall, including denied and challenged traffic, to keep storage endpoints secure and observable.
   </Card>
-  <Card title="Functions" icon="code" href="#functions">
-    Deploy serverless functions in multiple runtimes. Scale automatically without managing servers.
+  <Card title="Quota tracking and monitoring" icon="bar-chart" href="#quota-tracking-and-monitoring">
+    Track storage usage, read and write operations, and limits per project so you can stay within quotas and understand growth over time.
   </Card>
-  <Card title="Realtime" icon="wifi" href="#realtime">
-    Enable live updates with pub/sub messaging and realtime database syncing across clients.
+  <Card title="Public and private bucket access" icon="lock" href="#public-and-private-buckets">
+    Mark buckets as public for direct file access or keep them private and route all reads and writes through your own services.
+  </Card>
+  <Card title="Dashboard experience" icon="monitor" href="#dashboard-experience">
+    Use the Novisurf dashboard for a high-level project overview, a storage browser, firewall analytics, and project-level settings.
+  </Card>
+  <Card title="Typed JavaScript and TypeScript SDK" icon="code" href="#developer-tooling">
+    Integrate Novisurf Storage into your apps with an official JS and TS SDK for programmatic access and tooling support.
   </Card>
 </Columns>
 
-## Benefits for Developers and Teams
+### Multi-node object storage
 
-You save time by avoiding the complexity of stitching together separate services. Dreambase handles infrastructure, security, and scaling, letting your team iterate faster.
+Multi-node storage lets Novisurf place your data across different backends while exposing a single, consistent storage interface.
 
-<Callout kind="tip">
-  Teams using Dreambase report 50% faster feature delivery and reduced operational overhead.
+- **ONPREM storage** — Use `ONPREM` when you need buckets backed by on-premises infrastructure, such as data centers you manage or dedicated appliances.
+- **NF storage** — Use `NF` for buckets that live on network file storage, ideal for cloud-native deployments and elastic capacity.
+- **Unified access** — Regardless of backend type, interact with buckets and objects in the same way, while Novisurf handles replication, routing, and node-level details.
+
+This approach helps you mix and match storage strategies without changing how your application works with files.
+
+### Firewall analytics and security
+
+Firewall analytics show how requests interact with your storage layer so you can tune security and understand threat patterns.
+
+- **Visibility into blocked traffic** — Track denied and challenged requests to understand which buckets see the most suspicious activity.
+- **Per-bucket insights** — Review analytics bucket by bucket to see how rules affect specific apps, tenants, or environments.
+- **Security posture monitoring** — Use these insights to adjust firewall rules, rate limits, and access controls to balance security and usability.
+
+With firewall analytics in place, you avoid treating storage as a blind spot in your security stack.
+
+### Quota tracking and monitoring
+
+Quota tracking and monitoring help you keep storage usage within your plan and predict when to scale.
+
+- **Storage capacity** — Monitor how much space each project consumes and how close you are to storage limits, including free tier allowances.
+- **Operation counts** — Track read and write operations per project so you can detect spikes and optimize hot paths.
+- **Planning and governance** — Use quota data to forecast growth, set internal policies, and prevent unexpected throttling or overages.
+
+By combining capacity and operations data, Novisurf gives you a complete view of how your storage is being used.
+
+### Public and private buckets
+
+Bucket-level access controls determine how files are exposed to your users and services.
+
+- **Private buckets** — Keep buckets private when you want all file access to flow through your own backend, where you can enforce authentication, authorization, and business logic.
+- **Public buckets** — Mark buckets as public when you want to serve assets such as profile images, marketing graphics, or downloadable content directly from Novisurf.
+- **Public file URLs** — Public files use the Novisurf Storage domain, following the pattern `https://storage.novisurf.top/{bucket}/{filename}`, which you can embed directly in your applications.
+
+Choosing between public and private buckets lets you tailor access patterns to the type of content you store.
+
+### Dashboard experience
+
+The Novisurf dashboard centralizes control and observability for your storage projects.
+
+- **Project overview** — See a high-level summary of quotas, storage usage, and recent activity across your project.
+- **Storage browser** — Browse buckets and objects, inspect file metadata, and verify that uploads and access controls behave as expected.
+- **Firewall analytics** — Explore firewall decisions and traffic patterns visually, drilling into specific buckets and time ranges.
+- **Project settings** — Configure project-level settings, including API keys, access control defaults, and other storage-related options.
+
+The dashboard gives you a visual counterpart to your programmatic workflows, making it easier to debug and operate your storage setup.
+
+### Developer tooling
+
+Developers integrate with Novisurf Storage through APIs and an official JavaScript and TypeScript SDK.
+
+<Callout kind="info">
+
+Use the SDK documentation in the SDK guide at `/sdk` to learn how to initialize a client, authenticate requests, and perform storage operations from your codebase.
+
 </Callout>
 
-Choose from multiple cloud regions to minimize latency and meet compliance needs.
+The SDK wraps common operations like bucket management, uploads, downloads, analytics, and quota inspection in typed APIs so you can work with Novisurf directly from modern JS and TS projects.
 
-## Quick Start
+## Next steps
 
-Get up and running in minutes with these steps:
+Explore these guides to move from overview to implementation.
 
-<Steps>
-  <Step title="Sign Up" icon="user-plus">
-    Create a free account at https://dreambase.io. No credit card needed.
-  </Step>
-  <Step title="Create Project" icon="plus">
-    Click "New Project" in the dashboard and name your project (e.g., "my-app").
-  </Step>
-  <Step title="Install SDK" icon="download">
-    Choose your language and install the SDK:
-    
-    <CodeGroup tabs="JavaScript,Python,Dart">
-      ```javascript
-      npm install dreambase
-      ```
-      ```python
-      pip install dreambase
-      ```
-      ```dart
-      dart pub add dreambase
-      ```
-    </CodeGroup>
-  </Step>
-  <Step title="Initialize Client" icon="settings">
-    Set your endpoint and project ID:
-    
-    ```javascript
-    import { Client, Account } from 'dreambase';
-
-    const client = new Client()
-      .setEndpoint('https://api.example.com/v1') // Your API endpoint
-      .setProject('YOUR_PROJECT_ID'); // Your project ID
-
-    const account = new Account(client);
-    ```
-  </Step>
-</Steps>
-
-## Next Steps
-
-Ready to dive deeper? Navigate to these guides:
-
-<Columns cols={3}>
+<Columns cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Build your first full application.
+    Walk through creating a project, configuring Novisurf Storage, and performing your first uploads and reads.
   </Card>
-  <Card title="Authentication" icon="shield" href="/authentication">
-    Secure your app with users and sessions.
-  </Card>
-  <Card title="Databases" icon="database" href="/databases">
-    Design and query your data models.
+  <Card title="SDK guide" icon="box" href="/sdk">
+    Learn how to integrate the official JavaScript and TypeScript SDK with your application code.
   </Card>
 </Columns>
-
-<Callout kind="success">
-  You've completed the introduction! Head to the [Quickstart](/quickstart) for hands-on experience.
-</Callout>

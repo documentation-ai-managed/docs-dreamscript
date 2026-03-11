@@ -1,160 +1,396 @@
 ---
-title: Quickstart Guide
-description: Set up your Dreambase account and create your first project in minutes to start building applications with backend services.
+title: Novisurf Storage quickstart
+description: Install the Novisurf Storage SDK, provision a bucket, upload your first file, and expose it via a public URL using TypeScript or JavaScript.
 ---
 
 ## Prerequisites
 
 <Callout kind="info" title="Before you begin">
+
 Ensure you have the following ready:
-- A GitHub account for optional integrations
-- Node.js `{version >= 18}` or Python `{version >= 3.10}` installed for SDK examples
-- Access to a code editor like VS Code
+
+- A Novisurf Storage account with access to your API key
+- Node.js version 18 or later installed
+- A code editor such as VS Code
+
 </Callout>
 
-## Create Your Dreambase Account
+## Install the Novisurf Storage SDK
 
-Sign up for a free Dreambase account to access backend services like databases, storage, and functions.
+Install the Novisurf Storage SDK from GitHub using your preferred package manager.
 
-<Steps>
-  <Step title="Visit Dashboard" icon="monitor">
-    Navigate to `https://dashboard.example.com` and click **Sign Up**.
-
-    <Image
-      src="https://via.placeholder.com/800x400/3B82F6/FFFFFF?text=Sign+Up"
-      alt="Dreambase dashboard signup page"
-      width="800"
-      height="400"
-    />
-  </Step>
-
-  <Step title="Complete Registration" icon="user-plus">
-    Enter your email, create a password, and verify your account via email.
-  </Step>
-
-  <Step title="Verify Email" icon="mail">
-    Check your inbox and click the verification link.
-  </Step>
-</Steps>
-
-## Set Up Your First Project
-
-Create a new project to organize your resources.
-
-<Steps>
-  <Step title="Create Project" icon="plus">
-    In the dashboard, click **Create Project** and name it `my-first-app`.
-  </Step>
-
-  <Step title="Copy Project ID" icon="copy">
-    Note your `PROJECT_ID` from the project settings. You'll need it for SDKs.
-  </Step>
-
-  <Step title="Enable Database Service" icon="database">
-    Go to **Database** in the sidebar and create your first database named `main`.
-  </Step>
-</Steps>
-
-## Configure Environment Variables
-
-Set up your environment with the required keys.
-
-<Tabs>
-  <Tab title="JavaScript" icon="code">
-    Create a `.env` file:
-
-````javascript
-DREAMBASE_ENDPOINT="https://api.example.com/v1"
-DREAMBASE_PROJECT_ID="your-project-id-here"
-DREAMBASE_API_KEY="YOUR_API_KEY"
-````
-  </Tab>
-
-  <Tab title="Python" icon="python">
-    Create a `.env` file:
-
-````python
-DREAMBASE_ENDPOINT = "https://api.example.com/v1"
-DREAMBASE_PROJECT_ID = "your-project-id-here"
-DREAMBASE_API_KEY = "YOUR_API_KEY"
-````
-  </Tab>
-</Tabs>
-
-## Make Your First Database Query
-
-Install the SDK and query your database.
-
-<CodeGroup tabs="JavaScript,Python">
-```javascript
-// Install: npm install dreambase
-import { Client, Databases, ID } from 'dreambase';
-
-const client = new Client();
-client.setEndpoint('https://api.example.com/v1').setProject('your-project-id-here');
-
-const databases = new Databases(client);
-
-const promise = databases.createDocument(
-  'main',
-  'todos',
-  ID.unique(),
-  {
-    title: 'Learn Dreambase',
-    completed: false
-  }
-);
-
-promise.then(response => console.log(response), error => console.log(error));
+<CodeGroup tabs="npm,yarn,pnpm">
+```bash
+npm install github:yourusername/dreambase-sdk
 ```
 
-```python
-# Install: pip install dreambase
-from dreambase import Client, Databases, ID
+```bash
+yarn add github:yourusername/dreambase-sdk
+```
 
-client = Client()
-client.set_endpoint('https://api.example.com/v1').set_project('your-project-id-here')
-
-databases = Databases(client)
-
-result = databases.create_document(
-  database_id='main',
-  collection_id='todos',
-  document_id=ID.unique(),
-  data={
-    'title': 'Learn Dreambase',
-    'completed': False
-  }
-)
-
-print(result)
+```bash
+pnpm add github:yourusername/dreambase-sdk
 ```
 </CodeGroup>
 
-<Callout kind="success">
-Your first document is created! Check the dashboard to view it.
+## Configure environment variables
+
+Define the endpoint and API key that the SDK uses to authenticate with Novisurf Storage.
+
+Create a `.env` file in the root of your project:
+
+```bash
+DREAM_ENDPOINT="https://api.novisurf.top"
+DREAMBASE_API_KEY="db_xxxxx_xxxxxxxxxxxxxxxxxx"
+```
+
+<Callout kind="tip">
+
+Store `DREAMBASE_API_KEY` securely and never commit it to version control. Use environment managers or deployment platform secrets in production.
+
 </Callout>
 
-## Next Steps
+## Initialize the SDK
 
-Explore more features to build your application.
+Create a minimal client that connects to Novisurf Storage using the environment variables.
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+// src/storage.ts
+import { Dreambase } from '@dreambase/sdk';
+
+const storage = new Dreambase({
+  endpoint: process.env.DREAM_ENDPOINT, // e.g., 'https://api.novisurf.top'
+  apiKey: process.env.DREAMBASE_API_KEY,
+});
+
+export default storage;
+```
+
+```javascript
+// src/storage.js
+import { Dreambase } from '@dreambase/sdk';
+
+const storage = new Dreambase({
+  endpoint: process.env.DREAM_ENDPOINT, // e.g., 'https://api.novisurf.top'
+  apiKey: process.env.DREAMBASE_API_KEY,
+});
+
+export default storage;
+```
+</CodeGroup>
+
+If the configuration is correct, creating the `storage` instance does not throw an error and is ready to perform operations.
+
+## Provision a bucket and upload your first object
+
+Use a single project identifier (for example `myproject`) as the logical bucket key for all Novisurf Storage operations.
+
+<Steps>
+  <Step title="Provision a storage bucket" icon="plus">
+
+Call `provisionStorageBucket` once for your project to create the underlying storage bucket and access keys.
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+import storage from './storage';
+
+async function setupBucket() {
+  const result = await storage.provisionStorageBucket('myproject');
+
+  if (!result.ok) {
+    throw new Error('Failed to provision storage bucket');
+  }
+
+  console.log('Bucket created:', result.bucket);
+  console.log('Access key:', result.accessKey);
+}
+
+setupBucket().catch(console.error);
+```
+
+```javascript
+import storage from './storage';
+
+async function setupBucket() {
+  const result = await storage.provisionStorageBucket('myproject');
+
+  if (!result.ok) {
+    throw new Error('Failed to provision storage bucket');
+  }
+
+  console.log('Bucket created:', result.bucket);
+  console.log('Access key:', result.accessKey);
+}
+
+setupBucket().catch(console.error);
+```
+</CodeGroup>
+
+On success, your terminal logs the new bucket name and access key, confirming that Novisurf Storage is ready for use.
+
+  </Step>
+
+  <Step title="Inspect your storage key and endpoint" icon="info">
+
+Retrieve the storage key details to see which protocol and endpoint your bucket uses.
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+import storage from './storage';
+
+async function printStorageKey() {
+  const key = await storage.getStorageKey('myproject');
+
+  console.log('Protocol type:', key.protocolType); // 'ONPREM' or 'NF'
+  console.log('Endpoint:', key.endpoint);
+  console.log('Public domain:', key.domain); // e.g., 'storage.novisurf.top'
+}
+
+printStorageKey().catch(console.error);
+```
+
+```javascript
+import storage from './storage';
+
+async function printStorageKey() {
+  const key = await storage.getStorageKey('myproject');
+
+  console.log('Protocol type:', key.protocolType); // 'ONPREM' or 'NF'
+  console.log('Endpoint:', key.endpoint);
+  console.log('Public domain:', key.domain); // e.g., 'storage.novisurf.top'
+}
+
+printStorageKey().catch(console.error);
+```
+</CodeGroup>
+
+You should see `protocolType` as either `ONPREM` or `NF`, along with the resolved `endpoint` and `domain` for your bucket.
+
+  </Step>
+
+  <Step title="Upload an object" icon="upload">
+
+Encode a small text file as base64 and upload it to your project bucket.
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+import storage from './storage';
+
+async function uploadHello() {
+  const content = 'Hello, Novisurf Storage!';
+  const contentBase64 = Buffer.from(content, 'utf8').toString('base64');
+
+  await storage.uploadObject(
+    'myproject',
+    'hello.txt',
+    contentBase64,
+    'text/plain'
+  );
+
+  console.log('Uploaded hello.txt');
+}
+
+uploadHello().catch(console.error);
+```
+
+```javascript
+import storage from './storage';
+
+async function uploadHello() {
+  const content = 'Hello, Novisurf Storage!';
+  const contentBase64 = Buffer.from(content, 'utf8').toString('base64');
+
+  await storage.uploadObject(
+    'myproject',
+    'hello.txt',
+    contentBase64,
+    'text/plain'
+  );
+
+  console.log('Uploaded hello.txt');
+}
+
+uploadHello().catch(console.error);
+```
+</CodeGroup>
+
+If the upload succeeds, your terminal prints `Uploaded hello.txt` and the object appears when you list objects for `myproject`.
+
+  </Step>
+
+  <Step title="List objects in your bucket" icon="list">
+
+List the objects for your project to verify that `hello.txt` exists.
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+import storage from './storage';
+
+async function listObjects() {
+  const result = await storage.listStorageObjects('myproject');
+
+  console.log('Bucket:', result.bucket);
+  console.log('Object count:', result.count);
+  console.log('Objects:', result.objects);
+}
+
+listObjects().catch(console.error);
+```
+
+```javascript
+import storage from './storage';
+
+async function listObjects() {
+  const result = await storage.listStorageObjects('myproject');
+
+  console.log('Bucket:', result.bucket);
+  console.log('Object count:', result.count);
+  console.log('Objects:', result.objects);
+}
+
+listObjects().catch(console.error);
+```
+</CodeGroup>
+
+You should see `hello.txt` in the `objects` array with metadata such as size and content type.
+
+  </Step>
+
+  <Step title="Make the bucket public and access the file" icon="globe-2">
+
+Toggle the bucket to public and construct a public URL for `hello.txt`.
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+import storage from './storage';
+
+async function makePublicAndGetUrl() {
+  // Set bucket to public
+  await storage.setStorageBucketPublic('myproject', true);
+
+  // Get storage key to retrieve bucket name and domain
+  const key = await storage.getStorageKey('myproject');
+  
+  // Construct public URL
+  const publicUrl = `https://${key.domain}/${key.bucket}/hello.txt`;
+
+  console.log('Public URL:', publicUrl);
+}
+
+makePublicAndGetUrl().catch(console.error);
+```
+
+```javascript
+import storage from './storage';
+
+async function makePublicAndGetUrl() {
+  // Set bucket to public
+  await storage.setStorageBucketPublic('myproject', true);
+
+  // Get storage key to retrieve bucket name and domain
+  const key = await storage.getStorageKey('myproject');
+  
+  // Construct public URL
+  const publicUrl = `https://${key.domain}/${key.bucket}/hello.txt`;
+
+  console.log('Public URL:', publicUrl);
+}
+
+makePublicAndGetUrl().catch(console.error);
+```
+</CodeGroup>
+
+The public file URL follows the pattern `https://storage.novisurf.top/{bucket}/hello.txt`. Open the printed URL in a browser to see the file contents.
+
+  </Step>
+
+  <Step title="Delete an object and check quota" icon="trash">
+
+Clean up the demo file and inspect your current storage usage and operation counts.
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+import storage from './storage';
+
+async function cleanupAndQuota() {
+  await storage.deleteObject('myproject', 'hello.txt');
+  console.log('Deleted hello.txt');
+
+  const quota = await storage.getQuota('myproject');
+
+  console.log('Storage used:', quota.storage?.used, 'bytes');
+  console.log('Storage limit:', quota.storage?.limit, 'bytes');
+  console.log('Read ops:', quota.operations?.reads);
+  console.log('Write ops:', quota.operations?.writes);
+}
+
+cleanupAndQuota().catch(console.error);
+```
+
+```javascript
+import storage from './storage';
+
+async function cleanupAndQuota() {
+  await storage.deleteObject('myproject', 'hello.txt');
+  console.log('Deleted hello.txt');
+
+  const quota = await storage.getQuota('myproject');
+
+  console.log('Storage used:', quota.storage?.used, 'bytes');
+  console.log('Storage limit:', quota.storage?.limit, 'bytes');
+  console.log('Read ops:', quota.operations?.reads);
+  console.log('Write ops:', quota.operations?.writes);
+}
+
+cleanupAndQuota().catch(console.error);
+```
+</CodeGroup>
+
+You should see confirmation that `hello.txt` is deleted and a snapshot of storage usage and read or write operation counts for `myproject`.
+
+  </Step>
+</Steps>
+
+<Callout kind="success">
+
+You have provisioned a Novisurf Storage bucket, uploaded and served a public file, and inspected quota metrics. You are ready to integrate these operations into your application.
+
+</Callout>
+
+## Rate limits and best practices
+
+Novisurf Storage applies per-project rate limits of approximately 20 write operations per minute and 50 read operations per minute.
+
+<Callout kind="info">
+
+Batch non-critical writes where possible, and cache frequently accessed objects on the client or behind your own CDN to stay within read limits.
+
+</Callout>
+
+## Next steps
+
+Explore more resources to build on top of Novisurf Storage.
 
 <Columns cols={3}>
+  <Card title="SDK reference" icon="code" href="/sdk">
+    Browse all available storage methods, parameters, and return types in the SDK.
+  </Card>
+
+  <Card title="Core concepts" icon="book-open" href="/concepts">
+    Understand buckets, projects, public access, and quota models in more depth.
+  </Card>
+
   <Card title="Authentication" icon="lock" href="/authentication">
-    Secure your app with user accounts and sessions.
-  </Card>
-
-  <Card title="Storage" icon="upload" href="/configuration">
-    Manage files with secure storage buckets.
-  </Card>
-
-  <Card title="Functions" icon="code" href="/introduction">
-    Deploy serverless code for custom logic.
+    Learn how Novisurf API keys, projects, and environments work together securely.
   </Card>
 </Columns>
 
-<Expandable title="Troubleshooting Common Issues" default-open="false">
-- **API Key Error**: Ensure `YOUR_API_KEY` is copied from **API Keys** in project settings.
-- **CORS Issues**: Add your domain to allowed origins in project settings.
-- **Collection Missing**: Create a `todos` collection in the dashboard first.
+<Expandable title="Troubleshooting common issues" default-open="false">
+
+- **Unauthorized or 401 errors**: Confirm `DREAMBASE_API_KEY` is valid and loaded into your Node.js process.
+- **Missing environment variables**: Ensure `DREAM_ENDPOINT` and `DREAMBASE_API_KEY` are defined in `.env` and that you call `dotenv.config` before initializing the SDK.
+- **Object not found at public URL**: Check that you called `setStorageBucketPublic('myproject', true)` and that the path matches `https://storage.novisurf.top/{bucket}/{filename}`.
+- **Rate limit exceeded**: Space out bulk uploads and add client-side or CDN caching to reduce read traffic.
+
 </Expandable>
