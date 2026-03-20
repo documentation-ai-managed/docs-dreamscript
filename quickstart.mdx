@@ -17,19 +17,19 @@ Ensure you have the following ready:
 
 ## Install the Novisurf Storage SDK
 
-Install the Novisurf Storage SDK from GitHub using your preferred package manager.
+Install the Novisurf Storage SDK from npm using your preferred package manager.
 
 <CodeGroup tabs="npm,yarn,pnpm">
 ```bash
-npm install github:yourusername/dreambase-sdk
+npm install nvsfsdk
 ```
 
 ```bash
-yarn add github:yourusername/dreambase-sdk
+yarn add nvsfsdk
 ```
 
 ```bash
-pnpm add github:yourusername/dreambase-sdk
+pnpm add nvsfsdk
 ```
 </CodeGroup>
 
@@ -58,7 +58,7 @@ Create a minimal client that connects to Novisurf Storage using the environment 
 <CodeGroup tabs="TypeScript,JavaScript">
 ```ts
 // src/storage.ts
-import { Dreambase } from '@dreambase/sdk';
+import { Dreambase } from 'nvsfsdk';
 
 const storage = new Dreambase({
   endpoint: process.env.DREAM_ENDPOINT!, // e.g., 'https://api.novisurf.top'
@@ -71,7 +71,7 @@ export default storage;
 
 ```javascript
 // src/storage.js
-import { Dreambase } from '@dreambase/sdk';
+import { Dreambase } from 'nvsfsdk';
 
 const storage = new Dreambase({
   endpoint: process.env.DREAM_ENDPOINT, // e.g., 'https://api.novisurf.top'
@@ -141,7 +141,7 @@ setupBucket().catch(console.error);
 Alternatively, you can import directly from the SDK without creating a separate storage file:
 
 ```typescript
-import { Dreambase } from '@dreambase/sdk';
+import { Dreambase } from 'nvsfsdk';
 
 const storage = new Dreambase({
   endpoint: process.env.DREAM_ENDPOINT!,
