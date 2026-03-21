@@ -36,6 +36,22 @@
                 "icon": "zap"
               }
             ]
+          },
+          {
+            "group": "Fast Data Storage",
+            "pages": [
+              {
+                "title": "Edge Config",
+                "path": "edgeconfigguide",
+                "icon": "file-json-icon"
+              },
+              {
+                "title": "Key-Value storage",
+                "path": "key-value-storage",
+                "icon": "lucide-key"
+              }
+            ],
+            "icon": "file"
           }
         ]
       },

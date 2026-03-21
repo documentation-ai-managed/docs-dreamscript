@@ -1,0 +1,350 @@
+---
+title: Edge Config
+---
+
+## Prerequisites
+
+<Callout kind="info" title="Before you begin">
+
+Ensure you have the following ready:
+
+- A Novisurf account with access to the dashboard
+- An Edge Config store created from the **Edge Config** tab in your project dashboard
+- A scoped API key generated from the **API Keys** subtab of your store
+
+</Callout>
+
+## What is Novisurf Edge Config?
+
+Novisurf Edge Config is a persistent JSON configuration store. Unlike KV, entries have **no TTL** — they persist until you explicitly delete them. Each entry has a named key (e.g. `firewallaccess`) and a JSON value of any shape. It is designed for runtime configuration: feature flags, access control lists, A/B test parameters, and environment-specific settings that your edge workers or backend services read at runtime.
+
+## Create a store
+
+Open the **Edge Config** tab in your Novisurf dashboard, type a store name in the input at the top of the sidebar, and press **Enter** or click **+**. The dashboard creates the store and returns a `storeId` that looks like:
+
+```
+ec_mystore_89daefd42eab
+```
+
+Copy the store ID from the sidebar — click the **⎘** icon next to it, or use the copy button in the topbar once the store is selected.
+
+## Generate an API key
+
+In the **API Keys** subtab of your store, generate a scoped key:
+
+| Scope   | Allowed operations                        |
+|---------|-------------------------------------------|
+| `read`  | GET a single config, list all configs     |
+| `write` | PUT (upsert) a config, DELETE a config    |
+| `admin` | All of the above                          |
+
+The raw key is shown **once** at generation time. Copy it immediately. It looks like:
+
+```
+kv_read_a1b2c3d4e5f6...
+kv_write_a1b2c3d4e5f6...
+kv_admin_a1b2c3d4e5f6...
+```
+
+<Callout kind="tip">
+
+Edge Config reuses the same API key format and `X-KV-Key` header as Novisurf KV. A key is scoped to a single store — it cannot be used across stores.
+
+</Callout>
+
+## Authentication
+
+All Edge Config API requests use a single header:
+
+```http
+X-KV-Key: kv_write_a1b2c3d4e5f6...
+```
+
+No `Authorization: Bearer` header is needed when using a scoped API key. Bearer tokens (Appwrite JWTs) are only required for management operations (creating stores, listing stores, generating keys).
+
+<Callout kind="tip">
+
+Quota is attributed to the **store owner**, not the caller. If you share a read key with a third-party service, their reads count against your account.
+
+</Callout>
+
+## Base URL
+
+```
+https://configs.novisurf.top
+```
+
+## Write a config entry
+
+```http
+PUT /v1/ec/{storeId}/{key}
+X-KV-Key: kv_write_...
+Content-Type: application/json
+
+{
+  "value": { "enabled": true, "allowedIps": ["1.2.3.4"] }
+}
+```
+
+The `value` field can be any JSON-serialisable type: object, array, string, number, or boolean.
+
+<CodeGroup tabs="curl,JavaScript,Python">
+```bash
+curl -X PUT https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess \
+  -H "X-KV-Key: kv_write_a1b2c3d4e5f6" \
+  -H "Content-Type: application/json" \
+  -d '{"value": {"enabled": true, "allowedIps": ["1.2.3.4"]}}'
+```
+
+```javascript
+const res = await fetch(
+  'https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess',
+  {
+    method: 'PUT',
+    headers: {
+      'X-KV-Key': 'kv_write_a1b2c3d4e5f6',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      value: { enabled: true, allowedIps: ['1.2.3.4'] },
+    }),
+  }
+);
+const data = await res.json();
+// { ok: true, key: 'firewallaccess', updatedAt: '2025-01-01T00:00:00.000Z' }
+```
+
+```python
+import httpx, json
+
+r = httpx.put(
+    "https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess",
+    headers={"X-KV-Key": "kv_write_a1b2c3d4e5f6", "Content-Type": "application/json"},
+    content=json.dumps({"value": {"enabled": True, "allowedIps": ["1.2.3.4"]}}),
+)
+print(r.json())
+```
+</CodeGroup>
+
+**Response**
+
+```json
+{
+  "ok": true,
+  "key": "firewallaccess",
+  "updatedAt": "2025-01-01T00:00:00.000Z"
+}
+```
+
+## Read a config entry
+
+```http
+GET /v1/ec/{storeId}/{key}
+X-KV-Key: kv_read_...
+```
+
+<CodeGroup tabs="curl,JavaScript,Python">
+```bash
+curl https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess \
+  -H "X-KV-Key: kv_read_a1b2c3d4e5f6"
+```
+
+```javascript
+const res = await fetch(
+  'https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess',
+  { headers: { 'X-KV-Key': 'kv_read_a1b2c3d4e5f6' } }
+);
+const { ok, key, value, updatedAt } = await res.json();
+```
+
+```python
+import httpx
+
+r = httpx.get(
+    "https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess",
+    headers={"X-KV-Key": "kv_read_a1b2c3d4e5f6"},
+)
+print(r.json())
+```
+</CodeGroup>
+
+**Response**
+
+```json
+{
+  "ok": true,
+  "key": "firewallaccess",
+  "value": { "enabled": true, "allowedIps": ["1.2.3.4"] },
+  "updatedAt": "2025-01-01T00:00:00.000Z"
+}
+```
+
+Returns `404` if the key does not exist.
+
+## List all config entries in a store
+
+Returns all keys and their values. Useful for bootstrapping your application config at startup.
+
+```http
+GET /v1/ec/{storeId}
+X-KV-Key: kv_read_...
+```
+
+<CodeGroup tabs="curl,JavaScript,Python">
+```bash
+curl https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab \
+  -H "X-KV-Key: kv_read_a1b2c3d4e5f6"
+```
+
+```javascript
+const res = await fetch(
+  'https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab',
+  { headers: { 'X-KV-Key': 'kv_read_a1b2c3d4e5f6' } }
+);
+const { ok, configs } = await res.json();
+// configs: [{ key, value, updatedAt }, ...]
+```
+
+```python
+import httpx
+
+r = httpx.get(
+    "https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab",
+    headers={"X-KV-Key": "kv_read_a1b2c3d4e5f6"},
+)
+data = r.json()
+for cfg in data["configs"]:
+    print(cfg["key"], cfg["value"])
+```
+</CodeGroup>
+
+**Response**
+
+```json
+{
+  "ok": true,
+  "configs": [
+    {
+      "key": "firewallaccess",
+      "value": { "enabled": true, "allowedIps": ["1.2.3.4"] },
+      "updatedAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "key": "featureflags",
+      "value": { "darkMode": true, "betaCheckout": false },
+      "updatedAt": "2025-01-02T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+## Delete a config entry
+
+```http
+DELETE /v1/ec/{storeId}/{key}
+X-KV-Key: kv_write_...
+```
+
+<CodeGroup tabs="curl,JavaScript">
+```bash
+curl -X DELETE https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess \
+  -H "X-KV-Key: kv_write_a1b2c3d4e5f6"
+```
+
+```javascript
+await fetch(
+  'https://configs.novisurf.top/v1/ec/ec_mystore_89daefd42eab/firewallaccess',
+  {
+    method: 'DELETE',
+    headers: { 'X-KV-Key': 'kv_write_a1b2c3d4e5f6' },
+  }
+);
+```
+</CodeGroup>
+
+## Usage in a Cloudflare Worker
+
+A common pattern is to fetch your entire config store at the start of a request and use it to drive runtime behaviour.
+
+```javascript
+export default {
+  async fetch(request, env) {
+    // Fetch all configs once per request (or cache in KV/memory)
+    const res = await fetch(
+      `https://configs.novisurf.top/v1/ec/${env.EC_STORE_ID}`,
+      { headers: { 'X-KV-Key': env.EC_READ_KEY } }
+    );
+    const { configs } = await res.json();
+
+    // Build a lookup map
+    const cfg = Object.fromEntries(configs.map((c) => [c.key, c.value]));
+
+    // Use config values
+    if (!cfg.firewallaccess?.enabled) {
+      return new Response('Forbidden', { status: 403 });
+    }
+
+    return new Response('OK');
+  },
+};
+```
+
+<Callout kind="tip">
+
+For high-traffic workers, cache the config response in Cloudflare KV or in-memory with a short TTL (e.g. 30 seconds) to avoid hitting the Edge Config API on every request.
+
+</Callout>
+
+## Usage in a Deno / Node.js backend
+
+```typescript
+const STORE_ID = process.env.EC_STORE_ID!;
+const READ_KEY = process.env.EC_READ_KEY!;
+
+async function getConfig(key: string) {
+  const res = await fetch(
+    `https://configs.novisurf.top/v1/ec/${STORE_ID}/${key}`,
+    { headers: { 'X-KV-Key': READ_KEY } }
+  );
+  if (!res.ok) return null;
+  const { value } = await res.json();
+  return value;
+}
+
+// Example: read feature flags
+const flags = await getConfig('featureflags');
+if (flags?.betaCheckout) {
+  // enable beta checkout flow
+}
+```
+
+## Error reference
+
+| Status | Meaning |
+|--------|---------|
+| 401 | Missing or invalid auth header |
+| 403 | API key scope insufficient (e.g. using a read key for a write operation) |
+| 404 | Config key not found / store not found |
+| 400 | Missing or invalid `value` field in request body |
+
+## Differences from KV
+
+| Feature | KV | Edge Config |
+|---------|-----|-------------|
+| TTL / expiry | Required (min 60s) | None — persists forever |
+| Storage | Disk (file per key) | Postgres (JSONB) |
+| Use case | Ephemeral cache, sessions | Persistent config, feature flags |
+| Value type | Any JSON | Any JSON |
+| Auth header | `X-KV-Key` | `X-KV-Key` (same) |
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="KV Store" icon="key-round" href="/kvguide">
+    Store short-lived key-value pairs with automatic TTL expiry.
+  </Card>
+
+  <Card title="Storage SDK" icon="code" href="/sdk">
+    Upload and serve files with the Novisurf Storage SDK.
+  </Card>
+</Columns>

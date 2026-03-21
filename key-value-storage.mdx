@@ -1,0 +1,291 @@
+---
+title: Key-Value Store
+---
+## Prerequisites
+
+<Callout kind="info" collapsed="false">
+  Ensure you have the following ready:
+
+  - A Novisurf account with access to the dashboard
+
+  - A KV namespace created from the **KV** tab in your project dashboard
+
+  - A scoped API key generated from the **Settings** subtab of your namespace
+</Callout>
+
+## What is Novisurf KV?
+
+Novisurf KV is a low-latency key-value store. Each entry has a key, a JSON-serialisable value, and a required TTL (time-to-live). Entries expire automatically when their TTL elapses. It is designed for ephemeral data: feature flags, session tokens, rate-limit counters, and short-lived cache entries.
+
+## Create a namespace
+
+Open the **KV** tab in your Novisurf dashboard, click **+ New namespace**, and enter a project name. The dashboard returns a `namespaceId` that looks like:
+
+```
+ns_myproject_abc123def456
+```
+
+Keep this ID — you will use it in every API call.
+
+## Generate an API key
+
+In the **Settings** subtab of your namespace, generate a scoped key:
+
+| Scope   | Allowed operations               |
+| ------- | -------------------------------- |
+| `read`  | GET a single key, list keys      |
+| `write` | PUT (upsert) a key, DELETE a key |
+| `admin` | All of the above                 |
+
+The raw key is shown **once** at generation time. Copy it immediately. It looks like:
+
+```
+kv_read_a1b2c3d4e5f6...
+kv_write_a1b2c3d4e5f6...
+kv_admin_a1b2c3d4e5f6...
+```
+
+The prefix (`kv_read_`, `kv_write_`, `kv_admin_`) is cosmetic — the actual scope is stored server-side.
+
+## Authentication
+
+All KV API requests use a single header:
+
+```http
+X-KV-Key: kv_write_a1b2c3d4e5f6...
+```
+
+No `Authorization: Bearer` header is needed when using a scoped API key. Bearer tokens (Appwrite JWTs) are only required for dashboard management operations (creating namespaces, listing namespaces, generating keys).
+
+<Callout kind="tip" collapsed="false">
+  Quota is always attributed to the **namespace owner**, not the caller. If you share a read key with a third party, their reads count against your quota.
+</Callout>
+
+## Base URL
+
+```
+https://configs.novisurf.top
+```
+
+## Write a key
+
+```http
+PUT /v1/kv/{namespaceId}/{key}
+X-KV-Key: kv_write_...
+Content-Type: application/json
+
+{
+  "value": { "enabled": true, "threshold": 42 },
+  "ttlSeconds": 3600
+}
+```
+
+<CodeGroup show-lines="true" tabs={[]}>
+  ```bash
+  curl -X PUT https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey \
+    -H "X-KV-Key: kv_write_a1b2c3d4e5f6" \
+    -H "Content-Type: application/json" \
+    -d '{"value": {"enabled": true}, "ttlSeconds": 3600}'
+  ```
+
+  ```javascript
+  const res = await fetch(
+    'https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey',
+    {
+      method: 'PUT',
+      headers: {
+        'X-KV-Key': 'kv_write_a1b2c3d4e5f6',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ value: { enabled: true }, ttlSeconds: 3600 }),
+    }
+  );
+  const data = await res.json();
+  // { ok: true, key: 'mykey', ttlSeconds: 3600, expiresAt: 1234567890000 }
+  ```
+
+  ```python
+  import httpx, json
+
+  r = httpx.put(
+      "https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey",
+      headers={"X-KV-Key": "kv_write_a1b2c3d4e5f6", "Content-Type": "application/json"},
+      content=json.dumps({"value": {"enabled": True}, "ttlSeconds": 3600}),
+  )
+  print(r.json())
+  ```
+</CodeGroup>
+
+**Response**
+
+```json
+{
+  "ok": true,
+  "key": "mykey",
+  "ttlSeconds": 3600,
+  "expiresAt": 1234567890000
+}
+```
+
+## Read a key
+
+```http
+GET /v1/kv/{namespaceId}/{key}
+X-KV-Key: kv_read_...
+```
+
+<CodeGroup show-lines="true" tabs={[]}>
+  ```bash
+  curl https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey \
+    -H "X-KV-Key: kv_read_a1b2c3d4e5f6"
+  ```
+
+  ```javascript
+  const res = await fetch(
+    'https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey',
+    { headers: { 'X-KV-Key': 'kv_read_a1b2c3d4e5f6' } }
+  );
+  const { ok, key, value, expiresAt, ttlSeconds } = await res.json();
+  ```
+
+  ```python
+  import httpx
+
+  r = httpx.get(
+      "https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey",
+      headers={"X-KV-Key": "kv_read_a1b2c3d4e5f6"},
+  )
+  print(r.json())
+  ```
+</CodeGroup>
+
+**Response**
+
+```json
+{
+  "ok": true,
+  "key": "mykey",
+  "value": { "enabled": true },
+  "ttlSeconds": 3600,
+  "expiresAt": 1234567890000
+}
+```
+
+Returns `404` if the key does not exist or has expired.
+
+## List all keys in a namespace
+
+Requires a Bearer token (Appwrite JWT) — not available via scoped API key.
+
+```http
+GET /v1/kv/{namespaceId}
+Authorization: Bearer <appwrite-jwt>
+```
+
+**Response**
+
+```json
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "mykey",
+      "ttlSeconds": 3600,
+      "expiresAt": 1234567890000,
+      "expiresAtIso": "2025-01-01T00:00:00.000Z",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+## Delete a key
+
+```http
+DELETE /v1/kv/{namespaceId}/{key}
+X-KV-Key: kv_write_...
+```
+
+<CodeGroup show-lines="true" tabs={[]}>
+  ```bash
+  curl -X DELETE https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey \
+    -H "X-KV-Key: kv_write_a1b2c3d4e5f6"
+  ```
+
+  ```javascript
+  await fetch(
+    'https://configs.novisurf.top/v1/kv/ns_myproject_abc123/mykey',
+    {
+      method: 'DELETE',
+      headers: { 'X-KV-Key': 'kv_write_a1b2c3d4e5f6' },
+    }
+  );
+  ```
+</CodeGroup>
+
+## Check quota and usage
+
+```http
+GET /v1/usage/{namespaceId}
+Authorization: Bearer <appwrite-jwt>
+```
+
+**Response**
+
+```json
+{
+  "ok": true,
+  "namespaceId": "ns_myproject_abc123",
+  "monthKey": "2025-01",
+  "limits": {
+    "reads": 10000,
+    "writes": 6000,
+    "lists": 1000,
+    "storageBytes": 1048576
+  },
+  "usage": {
+    "reads": 142,
+    "writes": 38,
+    "deletes": 5,
+    "lists": 2,
+    "storageBytes": 4096
+  }
+}
+```
+
+## TTL rules
+
+- Minimum TTL: **60 seconds**
+
+- Values below 60 are clamped to 60
+
+- There is no hard maximum — set as large a TTL as your use case requires
+
+- Expired keys are lazily deleted on next read or list
+
+## Error reference
+
+| Status | Code                               | Meaning                                        |
+| ------ | ---------------------------------- | ---------------------------------------------- |
+| 401    | —                                  | Missing or invalid auth header                 |
+| 403    | —                                  | API key scope insufficient for this operation  |
+| 404    | —                                  | Key not found or expired / namespace not found |
+| 429    | `monthly_quota_exceeded`           | Monthly read, write, or list limit reached     |
+| 403    | `namespace_storage_quota_exceeded` | Namespace storage limit reached                |
+
+<Callout kind="info" collapsed="false">
+  Quota resets on the first day of each UTC month.
+</Callout>
+
+## Next steps
+
+<Columns cols="2">
+  <Card title="Edge Config Store" href="/edgeconfigguide" icon="layers" horizontal="false">
+    Store persistent JSON configs without TTLs — ideal for feature flags and runtime settings.
+  </Card>
+
+  <Card title="Storage SDK" href="/quickstart" icon="code" horizontal="false" target="_self">
+    Upload and serve files with the Novisurf Storage SDK.
+  </Card>
+</Columns>
+
