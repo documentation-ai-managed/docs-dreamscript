@@ -1,6 +1,6 @@
 {
   "name": "Dreamscript",
-  "template": "classic",
+  "template": "atlas",
   "colors": {
     "light": {
       "brand": "#3B82F6"
@@ -52,6 +52,17 @@
               }
             ],
             "icon": "file"
+          },
+          {
+            "group": "Edge Network",
+            "pages": [
+              {
+                "title": "Concept",
+                "path": "concept",
+                "icon": "triangle-icon"
+              }
+            ],
+            "icon": "globe"
           }
         ]
       },
@@ -122,5 +133,17 @@
         ]
       }
     ]
+  },
+  "logo-dark": "https://blob-cdn.documentation.ai/org-63fc2b6b-09d5-49f1-b0cf-c762d11b2411/doc-1dda4787-e832-4843-ae50-91f6e279718f/1774145716509-of43l8q8fr-novisurf-wordmark.png?q=85&fm=auto&auto=compress%2Cformat",
+  "logo-light": "https://blob-cdn.documentation.ai/org-63fc2b6b-09d5-49f1-b0cf-c762d11b2411/doc-1dda4787-e832-4843-ae50-91f6e279718f/1774145730629-obwxkevz7n-novisurf-favicon.png?q=85&fm=auto&auto=compress%2Cformat",
+  "favicon": "https://blob-cdn.documentation.ai/org-63fc2b6b-09d5-49f1-b0cf-c762d11b2411/doc-1dda4787-e832-4843-ae50-91f6e279718f/1774145730629-obwxkevz7n-novisurf-favicon.png?q=85&fm=auto&auto=compress%2Cformat",
+  "initialRoute": "introduction",
+  "navbar": {
+    "actions": {
+      "primary": {
+        "title": "Dashboard",
+        "link": "https://novisurf.top/projects"
+      }
+    }
   }
 }
