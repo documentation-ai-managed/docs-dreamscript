@@ -2,6 +2,10 @@
 title: Novisurf Storage quickstart
 description: Install the Novisurf Storage SDK, provision a bucket, upload your first file, and expose it via a public URL using TypeScript or JavaScript.
 ---
+---
+title: Novisurf Storage quickstart
+description: Install the Novisurf Storage SDK, provision a bucket, upload your first file, and expose it via a public URL using TypeScript or JavaScript.
+---
 
 ## Prerequisites
 
@@ -17,19 +21,19 @@ Ensure you have the following ready:
 
 ## Install the Novisurf Storage SDK
 
-Install the Novisurf Storage SDK from npm using your preferred package manager.
+Install the Novisurf Storage SDK from GitHub using your preferred package manager.
 
 <CodeGroup tabs="npm,yarn,pnpm">
 ```bash
-npm install nvsfsdk
+npm install github:yourusername/dreambase-sdk
 ```
 
 ```bash
-yarn add nvsfsdk
+yarn add github:yourusername/dreambase-sdk
 ```
 
 ```bash
-pnpm add nvsfsdk
+pnpm add github:yourusername/dreambase-sdk
 ```
 </CodeGroup>
 
@@ -58,7 +62,7 @@ Create a minimal client that connects to Novisurf Storage using the environment 
 <CodeGroup tabs="TypeScript,JavaScript">
 ```ts
 // src/storage.ts
-import { Dreambase } from 'nvsfsdk';
+import { Dreambase } from '@dreambase/sdk';
 
 const storage = new Dreambase({
   endpoint: process.env.DREAM_ENDPOINT!, // e.g., 'https://api.novisurf.top'
@@ -71,7 +75,7 @@ export default storage;
 
 ```javascript
 // src/storage.js
-import { Dreambase } from 'nvsfsdk';
+import { Dreambase } from '@dreambase/sdk';
 
 const storage = new Dreambase({
   endpoint: process.env.DREAM_ENDPOINT, // e.g., 'https://api.novisurf.top'
@@ -141,7 +145,7 @@ setupBucket().catch(console.error);
 Alternatively, you can import directly from the SDK without creating a separate storage file:
 
 ```typescript
-import { Dreambase } from 'nvsfsdk';
+import { Dreambase } from '@dreambase/sdk';
 
 const storage = new Dreambase({
   endpoint: process.env.DREAM_ENDPOINT!,
@@ -243,6 +247,81 @@ uploadHello().catch(console.error);
 </CodeGroup>
 
 If the upload succeeds, your terminal prints `Uploaded hello.txt` and the object appears when you list objects for `myproject`.
+
+  </Step>
+
+  <Step title="Upload large files with WebSocket chunking" icon="upload">
+
+For larger uploads (videos, zips, datasets), use the SDK's WebSocket uploader which streams the file **chunk-by-chunk** instead of base64 encoding the entire payload.
+
+This uses `uploadFile(db, key, filePath, options)` and reports progress via the `progress` callback.
+
+<Callout kind="info">
+
+`uploadFile` is intended for **Node.js environments** because it reads from the local filesystem and uses a WebSocket connection.
+
+</Callout>
+
+<CodeGroup tabs="TypeScript,JavaScript">
+```ts
+import storage from './storage';
+
+async function uploadLargeFile() {
+  const result = await storage.uploadFile(
+    'myproject',
+    'uploads/big-video.mp4',
+    './assets/big-video.mp4',
+    {
+      // Default is 5MB. Tune based on your network/server limits.
+      chunkSize: 5 * 1024 * 1024,
+      progress: (percent) => {
+        console.log(`Upload progress: ${percent}%`);
+      },
+    }
+  );
+
+  if (!result.ok) {
+    throw new Error('Upload failed');
+  }
+
+  console.log('Uploaded:', result.key);
+  console.log('ETag:', result.etag);
+  console.log('Size:', result.size);
+}
+
+uploadLargeFile().catch(console.error);
+```
+
+```javascript
+import storage from './storage';
+
+async function uploadLargeFile() {
+  const result = await storage.uploadFile(
+    'myproject',
+    'uploads/big-video.mp4',
+    './assets/big-video.mp4',
+    {
+      chunkSize: 5 * 1024 * 1024,
+      progress: (percent) => {
+        console.log(`Upload progress: ${percent}%`);
+      },
+    }
+  );
+
+  if (!result.ok) {
+    throw new Error('Upload failed');
+  }
+
+  console.log('Uploaded:', result.key);
+  console.log('ETag:', result.etag);
+  console.log('Size:', result.size);
+}
+
+uploadLargeFile().catch(console.error);
+```
+</CodeGroup>
+
+The SDK automatically resolves your storage endpoint with `getStorageKey` and then opens a WebSocket connection to the storage node (`.../upload-ws`).
 
   </Step>
 
