@@ -27,13 +27,28 @@
             ]
           },
           {
-            "group": "SDKs",
+            "group": "Storage SDK",
             "icon": "compass",
             "pages": [
               {
-                "title": "Quickstart",
-                "path": "quickstart",
-                "icon": "zap"
+                "title": "Getting Started",
+                "path": "hello-sdk",
+                "icon": "hand"
+              },
+              {
+                "title": "Read Operations",
+                "path": "read-operations",
+                "icon": "file-spreadsheet"
+              },
+              {
+                "title": "Write Operations",
+                "path": "performing-write-operations",
+                "icon": "file-diff"
+              },
+              {
+                "title": "Examples",
+                "path": "examples",
+                "icon": "code2"
               }
             ]
           },

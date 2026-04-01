@@ -1,0 +1,50 @@
+---
+title: Example for Server
+---
+
+# Examples
+
+## Full server example (Node.js)
+
+This example:
+
+- Initializes the SDK once
+- Uploads a local file
+- Lists bucket contents
+- Builds a file URL and downloads it
+
+```ts
+import 'dotenv/config';
+import axios from 'axios';
+import { init, getInstance } from 'novisurf-sdk';
+
+async function main() {
+  init({
+    hostname: process.env.NS_HOSTNAME!,
+    token: process.env.NOVISURF_TOKEN!,
+  });
+
+  const ns = getInstance();
+
+  // Upload
+  await ns.uploadFile('myproject', 'uploads/', './README.md');
+
+  // List
+  const list = await ns.listFiles('myproject');
+  console.log('count:', list.count);
+  console.log('keys:', list.objects.map(o => o.key));
+
+  // Get URL
+  const url = await ns.getFileUrl('myproject', 'uploads/README.md');
+  console.log('url:', url);
+
+  // Download
+  const res = await axios.get(url, { responseType: 'arraybuffer' });
+  console.log('download bytes:', res.data.byteLength);
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+```

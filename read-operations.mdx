@@ -1,0 +1,61 @@
+---
+title: Reading files from bucket
+---
+<Card title="The 'myproject' term" horizontal="false" target="_self">
+  In the code, we mention 'myproject', it is not the bucket constructed name like nvsf\_\{bucketname}\_\{name} , just pass the project name from projects page as you intend. SDK will auto resolve it automatically.&#x20;
+</Card>
+
+# Perform Read Operations
+
+This doc covers:
+
+- Listing files in a bucket
+
+- Getting a public URL for a file
+
+- Reading/downloading a file
+
+## List bucket files
+
+```ts
+import { getInstance } from 'novisurf-sdk';
+
+const ns = getInstance();
+
+const { objects } = await ns.listFiles('myproject');
+for (const o of objects) {
+  console.log(o.key, o.size);
+}
+```
+
+## Get a file URL
+
+This constructs the path-style URL using the storage node endpoint and your bucket.
+
+```ts
+const url = await ns.getFileUrl('myproject', 'uploads/file.png');
+console.log(url);
+```
+
+## Read a file
+
+The SDK returns URLs; you can fetch them with `fetch` / `axios`.
+
+```ts
+import axios from 'axios';
+
+const url = await ns.getFileUrl('myproject', 'hello.txt');
+const res = await axios.get(url, { responseType: 'arraybuffer' });
+console.log(Buffer.from(res.data));
+```
+
+## Read using pre-signed URL
+
+If your bucket is private and you want a temporary unauthenticated URL:
+
+```ts
+const signed = await ns.presignUrl('myproject', 'hello.txt', { ttl: 60, method: 'GET' });
+const res = await fetch(signed.signedUrl);
+console.log(await res.text());
+```
+

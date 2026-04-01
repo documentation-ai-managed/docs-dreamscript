@@ -1,0 +1,70 @@
+---
+title: Getting Started
+---
+# Init the SDK
+
+## Install
+
+```bash
+npm i nvsfsdk
+```
+
+## Environment variables
+
+The SDK is intentionally simple: **only two** environment variables.
+
+```bash
+NS_HOSTNAME=https://sea.novisurf.top
+NOVISURF_TOKEN=nsk_your_bucket_token_here
+```
+
+- `NS_HOSTNAME`
+
+  - Base hostname of the Novisurf Storage node.
+
+  - Example: `https://sea.novisurf.top`
+
+  - Do not include a trailing slash.
+
+- `NOVISURF_TOKEN`
+
+  - Your bucket token (must start with `nsk_`).
+
+  - Sent as `X-Token` on every request.
+
+## Initialize once, reuse everywhere
+
+The SDK supports a singleton-style initialization so you can init at the top of your server and reuse the same client.
+
+```ts
+import { init, getInstance } from 'nvsfsdk';
+
+init({
+  hostname: process.env.NS_HOSTNAME!,
+  token: process.env.NOVISURF_TOKEN!,
+});
+
+const ns = getInstance();
+```
+
+## Alternative: direct construction
+
+```ts
+import Novisurf from 'nvsfsdk';
+
+const ns = new Novisurf({
+  hostname: process.env.NS_HOSTNAME!,
+  token: process.env.NOVISURF_TOKEN!,
+});
+```
+
+## Quick sanity checks
+
+```ts
+const info = await ns.getTokenInfo();
+console.log(info);
+
+const key = await ns.getStorageKey('myproject');
+console.log(key.bucket, key.endpoint);
+```
+

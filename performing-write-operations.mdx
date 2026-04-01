@@ -1,0 +1,76 @@
+---
+title: Writing files to the bucket
+---
+<Card title="The 'myproject' term" horizontal="false" target="_self">
+  In the code, we mention 'myproject', it is not the bucket constructed name like nvsf\_\{bucketname}\_\{name} , just pass the project name from projects page as you intend. SDK will auto resolve it automatically.
+</Card>
+
+# Perform Write Operations
+
+This doc covers:
+
+- Uploading files (Buffer + local paths)
+
+- Changing bucket visibility
+
+- Generating pre-signed URLs
+
+All requests are authenticated using `X-Token`.
+
+## Upload a Buffer
+
+```bash
+import { getInstance } from 'novisurf-sdk';
+
+const ns = getInstance();
+
+const data = Buffer.from('hello world');
+await ns.uploadBuffer('myproject', 'hello.txt', data, 'text/plain');
+```
+
+## Upload a local file path
+
+Uploads a file from disk.
+
+```ts
+import { getInstance } from 'novisurf-sdk';
+
+const ns = getInstance();
+
+await ns.uploadFile('myproject', 'uploads/', './local/path/to/file.png');
+```
+
+- If the `key` ends with `/`, the SDK appends the file name automatically.
+
+- Small files are uploaded with the JSON base64 endpoint.
+
+- Large files are uploaded using the multipart/WebSocket path.
+
+## Upload progress
+
+```ts
+await ns.uploadFile('myproject', 'uploads/', './big.iso', {
+  progress: (p) => console.log(`upload: ${p}%`),
+});
+```
+
+## Make a bucket public/private
+
+```ts
+await ns.setBucketPublic('myproject', true);
+await ns.setBucketPublic('myproject', false);
+```
+
+## Pre-signed URLs
+
+Pre-signed URLs let you grant temporary access without exposing your token.
+
+```ts
+const signed = await ns.presignUrl('myproject', 'uploads/file.png', {
+  ttl: 60 * 15,
+  method: 'GET',
+});
+
+console.log(signed.signedUrl);
+```
+
