@@ -1,6 +1,7 @@
 ---
 title: Writing files to the bucket
 ---
+
 <Card title="The 'myproject' term" horizontal="false" target="_self">
   In the code, we mention 'myproject', it is not the bucket constructed name like nvsf\_\{bucketname}\_\{name} , just pass the project name from projects page as you intend. SDK will auto resolve it automatically.
 </Card>
@@ -20,7 +21,7 @@ All requests are authenticated using `X-Token`.
 ## Upload a Buffer
 
 ```bash
-import { getInstance } from 'novisurf-sdk';
+import { getInstance } from 'nvsfsdk';
 
 const ns = getInstance();
 
@@ -33,7 +34,7 @@ await ns.uploadBuffer('myproject', 'hello.txt', data, 'text/plain');
 Uploads a file from disk.
 
 ```ts
-import { getInstance } from 'novisurf-sdk';
+import { getInstance } from 'nvsfsdk';
 
 const ns = getInstance();
 
@@ -73,4 +74,3 @@ const signed = await ns.presignUrl('myproject', 'uploads/file.png', {
 
 console.log(signed.signedUrl);
 ```
-

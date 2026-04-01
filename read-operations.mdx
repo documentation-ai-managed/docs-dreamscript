@@ -1,6 +1,7 @@
 ---
 title: Reading files from bucket
 ---
+
 <Card title="The 'myproject' term" horizontal="false" target="_self">
   In the code, we mention 'myproject', it is not the bucket constructed name like nvsf\_\{bucketname}\_\{name} , just pass the project name from projects page as you intend. SDK will auto resolve it automatically.&#x20;
 </Card>
@@ -18,7 +19,7 @@ This doc covers:
 ## List bucket files
 
 ```ts
-import { getInstance } from 'novisurf-sdk';
+import { getInstance } from 'nvsfsdk';
 
 const ns = getInstance();
 
@@ -58,4 +59,3 @@ const signed = await ns.presignUrl('myproject', 'hello.txt', { ttl: 60, method: 
 const res = await fetch(signed.signedUrl);
 console.log(await res.text());
 ```
-
