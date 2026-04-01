@@ -1,7 +1,6 @@
 ---
 title: Example for Server
 ---
-
 # Examples
 
 ## Full server example (Node.js)
@@ -16,7 +15,7 @@ This example:
 ```ts
 import 'dotenv/config';
 import axios from 'axios';
-import { init, getInstance } from 'nvsfsdk';
+import { init, getInstance } from 'novisurf-sdk';
 
 async function main() {
   init({
@@ -27,15 +26,15 @@ async function main() {
   const ns = getInstance();
 
   // Upload
-  await ns.uploadFile('myproject', 'uploads/', './README.md');
+  await ns.uploadFile('uploads/', './README.md');
 
   // List
-  const list = await ns.listFiles('myproject');
+  const list = await ns.listFiles();
   console.log('count:', list.count);
   console.log('keys:', list.objects.map(o => o.key));
 
   // Get URL
-  const url = await ns.getFileUrl('myproject', 'uploads/README.md');
+  const url = await ns.getFileUrl('uploads/README.md');
   console.log('url:', url);
 
   // Download
