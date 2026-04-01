@@ -1,12 +1,13 @@
 ---
 title: Getting Started
 ---
+
 # Init the SDK
 
 ## Install
 
 ```bash
-npm i novisurf-sdk
+npm i nvsfsdk
 ```
 
 ## Environment variables
@@ -31,7 +32,7 @@ NOVISURF_TOKEN=nsk_your_bucket_token_here
 The SDK supports a singleton-style initialization so you can init at the top of your server and reuse the same client.
 
 ```ts
-import { init, getInstance } from 'novisurf-sdk';
+import { init, getInstance } from 'nvsfsdk';
 
 init({
   hostname: process.env.NS_HOSTNAME!,
@@ -44,7 +45,7 @@ const ns = getInstance();
 ## Alternative: direct construction
 
 ```ts
-import Novisurf from 'novisurf-sdk';
+import Novisurf from 'nvsfsdk';
 
 const ns = new Novisurf({
   hostname: process.env.NS_HOSTNAME!,
@@ -62,4 +63,3 @@ console.log(info);
 const list = await ns.listFiles();
 console.log(list.objects);
 ```
-
